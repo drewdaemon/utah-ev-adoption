@@ -1,0 +1,295 @@
+{
+  "county_years": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "city_years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "fuel_vocabulary_by_year": {
+    "2015": [
+      "CONVERTED",
+      "DIESEL",
+      "ELECTRIC",
+      "FLEXIBLE",
+      "GASOLINE",
+      "HYBRID",
+      "NATURAL GAS",
+      "OTHER",
+      "PROPANE",
+      "UNKNOWN"
+    ],
+    "2016": [
+      "CONVERTED",
+      "DIESEL",
+      "ELECTRIC",
+      "FLEXIBLE",
+      "GASOLINE",
+      "HYBRID",
+      "NATURAL GAS",
+      "OTHER",
+      "PROPANE",
+      "UNKNOWN"
+    ],
+    "2017": [
+      "CONVERTED",
+      "DIESEL",
+      "ELECTRIC",
+      "FLEXIBLE",
+      "GASOLINE",
+      "HYBRID",
+      "NATURAL GAS",
+      "OTHER",
+      "PROPANE",
+      "UNKNOWN"
+    ],
+    "2018": [
+      "Converted",
+      "Diesel",
+      "Electric",
+      "Flexible",
+      "Gasoline",
+      "Hybrid",
+      "Natural Gas",
+      "Other",
+      "Propane"
+    ],
+    "2019": [
+      "Converted",
+      "Diesel",
+      "Electric",
+      "Flexible",
+      "Gasoline",
+      "Hybrid",
+      "Natural Gas",
+      "Other",
+      "Plug In Hybrid",
+      "Propane"
+    ],
+    "2020": [
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2021": [
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2022": [
+      "Alcohol",
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2023": [
+      "Alcohol",
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2024": [
+      "Alcohol",
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2025": [
+      "Alcohol",
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ]
+  },
+  "fuel_canonical_map": {
+    "Electric": {
+      "fuel": "BEV",
+      "ev_class": "BEV"
+    },
+    "ELECTRIC": {
+      "fuel": "BEV",
+      "ev_class": "BEV"
+    },
+    "Plug In Hybrid": {
+      "fuel": "PHEV",
+      "ev_class": "PHEV"
+    },
+    "Plug-in Hybrid": {
+      "fuel": "PHEV",
+      "ev_class": "PHEV"
+    },
+    "Hybrid": {
+      "fuel": "Hybrid",
+      "ev_class": "Hybrid"
+    },
+    "HYBRID": {
+      "fuel": "Hybrid",
+      "ev_class": "Hybrid"
+    },
+    "Gasoline": {
+      "fuel": "Gasoline",
+      "ev_class": "Non-electrified"
+    },
+    "GASOLINE": {
+      "fuel": "Gasoline",
+      "ev_class": "Non-electrified"
+    },
+    "Diesel": {
+      "fuel": "Diesel",
+      "ev_class": "Non-electrified"
+    },
+    "DIESEL": {
+      "fuel": "Diesel",
+      "ev_class": "Non-electrified"
+    },
+    "Flexible": {
+      "fuel": "Flex Fuel",
+      "ev_class": "Non-electrified"
+    },
+    "FLEXIBLE": {
+      "fuel": "Flex Fuel",
+      "ev_class": "Non-electrified"
+    },
+    "Natural Gas": {
+      "fuel": "Natural Gas",
+      "ev_class": "Non-electrified"
+    },
+    "NATURAL GAS": {
+      "fuel": "Natural Gas",
+      "ev_class": "Non-electrified"
+    },
+    "Compressed Natural Gas": {
+      "fuel": "Natural Gas",
+      "ev_class": "Non-electrified"
+    },
+    "Liquefied Natural Gas": {
+      "fuel": "Natural Gas",
+      "ev_class": "Non-electrified"
+    },
+    "Propane": {
+      "fuel": "Propane/LPG",
+      "ev_class": "Non-electrified"
+    },
+    "PROPANE": {
+      "fuel": "Propane/LPG",
+      "ev_class": "Non-electrified"
+    },
+    "Butane": {
+      "fuel": "Propane/LPG",
+      "ev_class": "Non-electrified"
+    },
+    "Hydrogen": {
+      "fuel": "Hydrogen",
+      "ev_class": "Non-electrified"
+    },
+    "Converted": {
+      "fuel": "Converted",
+      "ev_class": "Non-electrified"
+    },
+    "CONVERTED": {
+      "fuel": "Converted",
+      "ev_class": "Non-electrified"
+    },
+    "Alcohol": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    },
+    "Steam": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    },
+    "Other": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    },
+    "OTHER": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    },
+    "Unknown": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    },
+    "UNKNOWN": {
+      "fuel": "Other",
+      "ev_class": "Non-electrified"
+    }
+  },
+  "caveats": [
+    "City coverage is partial. The source states: 'City is determined by address as reported by vehicle owner. Only select cities are included.' City counts do NOT sum to the state total.",
+    "The 2020 vocabulary break is a real discontinuity. 'Converted' and 'Flexible' vanish after 2019 and were most likely folded into Gasoline. Annotate this in any time-series chart rather than smoothing it.",
+    "Hybrid/electric/CNG counts are only as accurate as manufacturer-provided data. Converted/Propane counts are only as accurate as owner-reported data.",
+    "'Passenger - Low Speed' vehicle type disappears from 2023 onward.",
+    "HEBER city is absent in 2025 (not renamed \u2014 no replacement row exists).",
+    "These are registration snapshots (active as of ~mid-February each year), not new-registration flows. Year-over-year deltas are net fleet change."
+  ]
+}
