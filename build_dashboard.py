@@ -262,6 +262,13 @@ def build_html(
   .vega-bind input[type=range]{{flex:1;cursor:pointer;accent-color:var(--blue)}}
   .vega-embed{{display:block!important;width:100%}}
   .vega-embed .vega-actions{{display:none!important}}
+  #place-sel{{
+    appearance:none;background:var(--surface);border:1px solid var(--border);
+    border-radius:6px;color:var(--ink);font-size:12px;
+    padding:4px 28px 4px 10px;cursor:pointer;max-width:200px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23898781' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;
+  }}
 </style>
 </head>
 <body>
@@ -283,6 +290,10 @@ def build_html(
       <button class="pill on" id="btn-share" onclick="setMetric('share')">EV share %</button>
       <button class="pill"    id="btn-count" onclick="setMetric('count')">EV count</button>
     </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span class="ctrl-label">Place</span>
+    <select id="place-sel" onchange="onPlaceSelect(this.value)"></select>
   </div>
 </div>
 
@@ -527,6 +538,23 @@ function fuelSpec() {{
   }};
 }}
 
+// ── Place select ──────────────────────────────────────────────────────────
+function populatePlaceSelect() {{
+  const pivot = level === 'county' ? COUNTY_PIVOT : CITY_PIVOT;
+  const places = [...new Set(pivot.map(d => d.place))].sort();
+  const sel = document.getElementById('place-sel');
+  sel.innerHTML = places
+    .map(p => `<option value="${{p}}"${{p === selPlace ? ' selected' : ''}}>${{p}}</option>`)
+    .join('');
+}}
+
+function onPlaceSelect(val) {{
+  selPlace = val;
+  document.getElementById('sel-name').textContent = selPlace;
+  renderDetails();
+  renderMap();
+}}
+
 // ── Render helpers ────────────────────────────────────────────────────────
 async function renderMap() {{
   if (mapView) {{ try {{ mapView.finalize(); }} catch(_) {{}} }}
@@ -543,6 +571,7 @@ async function renderMap() {{
     if (item && item.datum && item.datum.place) {{
       selPlace = item.datum.place;
       document.getElementById('sel-name').textContent = selPlace;
+      document.getElementById('place-sel').value = selPlace;
       renderDetails();
       // Rebuild map to update the orange outline on the newly selected shape
       renderMap();
@@ -557,6 +586,7 @@ async function renderDetails() {{
 }}
 
 async function boot() {{
+  populatePlaceSelect();
   document.getElementById('sel-name').textContent = selPlace;
   await renderMap();
   await renderDetails();
@@ -575,6 +605,7 @@ function setLevel(l) {{
   document.getElementById('map-title').textContent =
     `EV adoption by ${{l}}`;
   document.getElementById('city-note').style.display = l === 'city' ? '' : 'none';
+  populatePlaceSelect();
   document.getElementById('sel-name').textContent = selPlace;
   renderMap().then(() => renderDetails());
 }}
