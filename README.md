@@ -1,5 +1,7 @@
 # Utah EV Registration Study
 
+![Dashboard screenshot](ev-study-screenshot.png)
+
 Curated dataset of Utah on-highway vehicle registrations by fuel type, 2015–2025, extracted
 from the Utah State Tax Commission annual workbooks.
 
@@ -14,6 +16,8 @@ from the Utah State Tax Commission annual workbooks.
 **City coverage starts in 2018** because city-level fuel tables do not exist in the 2015–2017 workbooks.
 
 ## Schema
+
+The extracted data (both CSV and JSON) follow this format.
 
 County files:
 
@@ -32,15 +36,30 @@ City files: same but `city` replaces `county`/`county_code`.
 
 ## Regenerating
 
+The pipeline is two steps: extract → build.
+
+### 1. Extract raw data
+
 ```bash
 pip install -r requirements.txt
 python extract.py
 ```
 
-The script validates its own output by checking row sums against the `TOTAL` column in each
-source sheet, then asserts cross-year sanity (county/city set sizes, rising BEV trend, spot
-checks of known values). It will fail loudly if anything looks wrong rather than emitting
-quietly-wrong data.
+Reads all `*registrations.xlsx` workbooks in the project root and writes normalized CSVs/JSON to `data/`. The script validates its own output by checking row sums against the `TOTAL` column in each source sheet, then asserts cross-year sanity (county/city set sizes, rising BEV trend, spot checks of known values). It will fail loudly if anything looks wrong rather than emitting quietly-wrong data.
+
+### 2. Rebuild the dashboard
+
+```bash
+python build_dashboard.py
+```
+
+Reads the CSVs produced by `extract.py`, computes pivot tables and aggregates, and injects the results as inline data constants into `index.html`. The script treats `index.html` as the source of truth for all HTML/CSS/JS — it only replaces the `const COUNTY_PIVOT = ...`, `const STATE_SHARE = ...`, etc. blocks, so hand-edits to the page logic survive a rebuild.
+
+### Adding a new year
+
+1. Download the new workbook from the [Utah State Tax Commission](https://tax.utah.gov/commission/econstats/mv/registrations/) and place it in the project root named `YYYYregistrations.xlsx`.
+2. Run `python extract.py` then `python build_dashboard.py`.
+3. The year range in the subtitle and all data constants update automatically.
 
 ## Known caveats
 
@@ -59,13 +78,16 @@ quietly-wrong data.
 
 4. **`Passenger - Low Speed`** vehicle type disappears from the source starting in 2023.
 
-5. **`HEBER`** city is absent in the 2025 workbook (not renamed — no `HEBER CITY` row exists).
+5. **`HEBER`** city has problems... I still need to look into it.
 
 6. **These are snapshots, not flows.** Each file represents registrations active as of
    approximately mid-February of that year. Year-over-year deltas are net fleet change, not new
    registrations.
 
-## Source
+## Sources
 
-Utah State Tax Commission, Economics and Statistical Unit — *Utah Current Registrations*,
-annual workbooks 2015–2025.
+**Registration data:** Utah State Tax Commission, Economics and Statistical Unit — *Utah Current Registrations*, annual workbooks 2015–2026.
+
+**Geography:**
+- County boundaries: [us-atlas](https://github.com/topojson/us-atlas) (Census Bureau TIGER/Line), filtered to Utah FIPS `49*`, simplified 12% with mapshaper.
+- City/place boundaries: U.S. Census Bureau, TIGER Cartographic Boundary Files 2023 (`cb_2023_49_place_500k`), simplified 5% with mapshaper.
