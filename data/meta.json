@@ -10,7 +10,8 @@
     2022,
     2023,
     2024,
-    2025
+    2025,
+    2026
   ],
   "city_years": [
     2018,
@@ -20,7 +21,8 @@
     2022,
     2023,
     2024,
-    2025
+    2025,
+    2026
   ],
   "fuel_vocabulary_by_year": {
     "2015": [
@@ -155,6 +157,21 @@
       "Steam"
     ],
     "2025": [
+      "Alcohol",
+      "Butane",
+      "Compressed Natural Gas",
+      "Diesel",
+      "Electric",
+      "Gasoline",
+      "Hybrid",
+      "Hydrogen",
+      "Liquefied Natural Gas",
+      "Other",
+      "Plug-in Hybrid",
+      "Propane",
+      "Steam"
+    ],
+    "2026": [
       "Alcohol",
       "Butane",
       "Compressed Natural Gas",

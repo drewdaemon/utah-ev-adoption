@@ -20,13 +20,6 @@ npx --yes mapshaper /tmp/ut_raw.json -simplify 12% -o format=topojson geo/ut_cou
 # City (place) topology: Census TIGER cartographic boundaries
 curl -sS https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_49_place_500k.zip -o /tmp/places.zip
 cd /tmp && unzip -oq places.zip && cd -
-node -e "
-  const fs=require('fs');
-  // Strip all properties except NAME
-  const raw=fs.readFileSync('/tmp/cb_2023_49_place_500k.shp');
-  console.log('Use mapshaper to convert + strip');
-"
-# Simpler via mapshaper directly:
 npx --yes mapshaper /tmp/cb_2023_49_place_500k.zip \
   -each 'this.properties={NAME:this.properties.NAME}' \
   -simplify 5% \

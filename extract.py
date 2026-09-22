@@ -367,9 +367,9 @@ def collect() -> tuple[list[dict], list[dict]]:
 def validate(county_rows: list[dict], city_rows: list[dict]) -> None:
     print("\nValidating …")
     years = {r["year"] for r in county_rows}
-    assert years == set(range(2015, 2026)), f"Missing county years: {set(range(2015,2026))-years}"
+    assert years == set(range(2015, 2027)), f"Missing county years: {set(range(2015,2027))-years}"
     city_years = {r["year"] for r in city_rows}
-    assert city_years == set(range(2018, 2026)), f"Missing city years: {set(range(2018,2026))-city_years}"
+    assert city_years == set(range(2018, 2027)), f"Missing city years: {set(range(2018,2027))-city_years}"
 
     counties_per_year = {}
     for r in county_rows:
