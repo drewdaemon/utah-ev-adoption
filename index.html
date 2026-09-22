@@ -660,9 +660,9 @@ function setLevel(l) {
     l === 'state' ? 'UTAH STATEWIDE' : `EV adoption by ${l}`;
   document.getElementById('city-note').style.display = l === 'city' ? '' : 'none';
   const placeCtrl = document.getElementById('place-ctrl');
-  if (placeCtrl) placeCtrl.style.display = l === 'state' ? 'none' : '';
+  if (placeCtrl) placeCtrl.style.display = l === 'state' ? 'none' : 'flex';
   const colorCtrl = document.getElementById('color-ctrl');
-  if (colorCtrl) colorCtrl.style.display = l === 'state' ? 'none' : '';
+  if (colorCtrl) colorCtrl.style.display = l === 'state' ? 'none' : 'flex';
   document.getElementById('map-card').style.display = l === 'state' ? 'none' : '';
   document.getElementById('btn-statewide').style.display = l === 'state' ? 'none' : '';
   if (l === 'state') {
