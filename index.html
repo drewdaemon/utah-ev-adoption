@@ -30,11 +30,10 @@
     transition:background .12s,color .12s,border-color .12s;
   }
   .pill.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500}
-  .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}}
+  .layout{display:flex;flex-direction:column;gap:14px}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px}
   .card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-  #detail-panel{display:flex;flex-direction:column;gap:14px}
+  #detail-panel{display:contents}
   #sel-name{font-size:17px;font-weight:600;color:var(--ink);min-height:24px}
   .note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
   details{margin-top:8px}
@@ -105,6 +104,7 @@
     <div id="sel-name">Select a place on the map</div>
     <div class="card">
       <div class="card-title">Plug-in EV share over time (BEV + PHEV · excludes conventional hybrid)</div>
+      <button id="btn-statewide" class="fuel-pill on" style="--fc:#eb6834;margin-bottom:6px" onclick="toggleStatewide()"><span class="dot"></span>Statewide</button>
       <div id="share-embed"></div>
       <div class="card-title" style="margin-top:12px">Year-over-year change</div>
       <div id="deriv-embed"></div>
@@ -157,7 +157,8 @@ let metric   = 'share';
 let selPlace = 'SALT LAKE';
 let curYear  = 2026;
 let mapView  = null;
-let selFuels = new Set(FUEL_ORDER.filter(f => f !== 'Gasoline' && f !== 'Diesel'));
+let selFuels      = new Set(FUEL_ORDER.filter(f => f !== 'Gasoline' && f !== 'Diesel'));
+let showStatewide = true;
 
 // ── Vega-Lite shared theme ────────────────────────────────────────────────
 const VL_CONFIG = {
@@ -317,18 +318,34 @@ function shareSpec() {
   const placeData = years.map(y => ({
     year: y, ev_share: placeRow[`ev_share_${y}`] || 0, series: selPlace,
   }));
-  const stateData = STATE_SHARE
-    .filter(d => years.includes(d.year))
-    .map(d => ({year: d.year, ev_share: d.ev_share, series:'UTAH STATEWIDE'}));
+  const stateData = showStatewide
+    ? STATE_SHARE.filter(d => years.includes(d.year))
+        .map(d => ({year: d.year, ev_share: d.ev_share, series:'STATEWIDE'}))
+    : [];
+
+  if (!showStatewide) {
+    return {
+      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      width: 'container', height: 170,
+      data: {values: placeData},
+      mark: {type:'line', point:{filled:true, size:100}, strokeWidth:2, color:'#2a78d6'},
+      encoding: {
+        x: {field:'year', type:'ordinal', axis:{title:null, labelAngle:0}},
+        y: {field:'ev_share', type:'quantitative',
+             axis:{title:'EV share (BEV+PHEV)', format:'.1%'}, scale:{domainMin:0}},
+        tooltip: tip([{field:'ev_share',title:'EV share',format:'.2%'}]),
+      },
+    };
+  }
 
   const colorEnc = {
     field:'series', type:'nominal',
-    scale:{domain:[selPlace,'UTAH STATEWIDE'], range:['#2a78d6','#eb6834']},
+    scale:{domain:[selPlace,'STATEWIDE'], range:['#2a78d6','#eb6834']},
     legend:{title:null},
   };
   const dashEnc = {
     field:'series', type:'nominal',
-    scale:{domain:[selPlace,'UTAH STATEWIDE'], range:[[1,0],[4,2]]},
+    scale:{domain:[selPlace,'STATEWIDE'], range:[[1,0],[4,2]]},
     legend:{title:null},
   };
   const sharedMulti = {
@@ -354,6 +371,15 @@ function renderFuelFilter() {
     const on = selFuels.has(fuel);
     return `<button class="fuel-pill${on ? ' on' : ''}" style="--fc:${color}" onclick="toggleFuel('${fuel}')" aria-pressed="${on}"><span class="dot"></span>${fuel}</button>`;
   }).join('');
+}
+
+function toggleStatewide() {
+  showStatewide = !showStatewide;
+  document.getElementById('btn-statewide').classList.toggle('on', showStatewide);
+  const ss = shareSpec(), ds = derivSpec(), d2s = deriv2Spec();
+  if (ss)  vegaEmbed('#share-embed',  ss,  EMBED_OPT);
+  if (ds)  vegaEmbed('#deriv-embed',  ds,  EMBED_OPT);
+  if (d2s) vegaEmbed('#deriv2-embed', d2s, EMBED_OPT);
 }
 
 function toggleFuel(fuel) {
@@ -497,17 +523,18 @@ function derivSpec() {
                series: selPlace});
     const sd = STATE_SHARE.find(s => s.year === y);
     const sp = STATE_SHARE.find(s => s.year === prev);
-    if (sd && sp) rows.push({year: y, delta: sd.ev_share - sp.ev_share, series:'UTAH STATEWIDE'});
+    if (showStatewide && sd && sp) rows.push({year: y, delta: sd.ev_share - sp.ev_share, series:'STATEWIDE'});
   }
-  return mkDeriv(rows, {
+  const derivEnc = {
     x: {field:'year',   type:'ordinal',      axis:{title:null, labelAngle:0}},
     y: {field:'delta',  type:'quantitative', axis:{title:'Change (pp)', format:'.2%'}, scale:{domainMin:0}},
     color: {field:'series', type:'nominal',
-            scale:{domain:[selPlace,'UTAH STATEWIDE'], range:['#2a78d6','#eb6834']}, legend:{title:null}},
-    xOffset: {field:'series', type:'nominal', scale:{domain:[selPlace,'UTAH STATEWIDE']}},
+            scale:{domain:[selPlace,'STATEWIDE'], range:['#2a78d6','#eb6834']}, legend:{title:null}},
     tooltip: [{field:'series',title:'Series'},{field:'year',title:'Year'},
               {field:'delta',title:'YoY change',format:'+.2%'}],
-  });
+  };
+  if (showStatewide) derivEnc.xOffset = {field:'series', type:'nominal', scale:{domain:[selPlace,'STATEWIDE']}};
+  return mkDeriv(rows, derivEnc);
 }
 
 function deriv2Spec() {
@@ -552,20 +579,21 @@ function deriv2Spec() {
     const sd = STATE_SHARE.find(s => s.year === y);
     const sm = STATE_SHARE.find(s => s.year === years[i-1]);
     const sp = STATE_SHARE.find(s => s.year === years[i-2]);
-    if (sd && sm && sp)
+    if (showStatewide && sd && sm && sp)
       rows.push({year: y,
                  accel: (sd.ev_share - sm.ev_share) - (sm.ev_share - sp.ev_share),
-                 series: 'UTAH STATEWIDE'});
+                 series: 'STATEWIDE'});
   }
-  return mkD2(rows, {
+  const d2enc = {
     x: {field:'year',   type:'ordinal',      axis:{title:null, labelAngle:0}},
     y: {field:'accel',  type:'quantitative', axis:{title:'Acceleration (pp)', format:'+.2%'}},
     color: {field:'series', type:'nominal',
-            scale:{domain:[selPlace,'UTAH STATEWIDE'], range:['#2a78d6','#eb6834']}, legend:{title:null}},
-    xOffset: {field:'series', type:'nominal', scale:{domain:[selPlace,'UTAH STATEWIDE']}},
+            scale:{domain:[selPlace,'STATEWIDE'], range:['#2a78d6','#eb6834']}, legend:{title:null}},
     tooltip: [{field:'series',title:'Series'},{field:'year',title:'Year'},
               {field:'accel',title:'Acceleration',format:'+.2%'}],
-  });
+  };
+  if (showStatewide) d2enc.xOffset = {field:'series', type:'nominal', scale:{domain:[selPlace,'STATEWIDE']}};
+  return mkD2(rows, d2enc);
 }
 
 async function renderDetails() {
@@ -587,6 +615,8 @@ async function boot() {
     const colorCtrl = document.getElementById('color-ctrl');
     if (placeCtrl) placeCtrl.style.display = 'none';
     if (colorCtrl) colorCtrl.style.display = 'none';
+    document.getElementById('map-card').style.display = 'none';
+    document.getElementById('btn-statewide').style.display = 'none';
     document.getElementById('sel-name').textContent = 'UTAH STATEWIDE';
     setActive(['btn-state','btn-county','btn-city'], 'btn-state');
   } else {
@@ -614,6 +644,8 @@ function setLevel(l) {
   if (placeCtrl) placeCtrl.style.display = l === 'state' ? 'none' : '';
   const colorCtrl = document.getElementById('color-ctrl');
   if (colorCtrl) colorCtrl.style.display = l === 'state' ? 'none' : '';
+  document.getElementById('map-card').style.display = l === 'state' ? 'none' : '';
+  document.getElementById('btn-statewide').style.display = l === 'state' ? 'none' : '';
   if (l === 'state') {
     document.getElementById('sel-name').textContent = 'UTAH STATEWIDE';
   } else {
