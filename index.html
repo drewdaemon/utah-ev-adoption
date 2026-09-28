@@ -46,12 +46,34 @@
   .vega-bind input[type=range]{flex:1;cursor:pointer;accent-color:var(--blue)}
   .vega-embed{display:block!important;width:100%}
   .vega-embed .vega-actions{display:none!important}
-  #place-sel{
-    appearance:none;background:var(--surface);border:1px solid var(--border);
-    border-radius:6px;color:var(--ink);font-size:12px;
-    padding:4px 28px 4px 10px;cursor:pointer;max-width:200px;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23898781' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 8px center;
+  .map-row{display:flex;gap:14px;align-items:flex-start}
+  .map-col{flex:1;min-width:0}
+  #place-list-wrap{width:240px;flex-shrink:0}
+  #place-search{
+    width:100%;padding:6px 10px;font-size:12px;color:var(--ink);
+    background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  }
+  #place-search:focus{outline:2px solid var(--blue);outline-offset:-1px}
+  #place-list-head{font-size:11px;color:var(--muted);margin:8px 0 4px}
+  #place-list{
+    list-style:none;height:408px;overflow-y:auto;
+    border:1px solid var(--border);border-radius:6px;background:var(--bg);
+  }
+  .place-row{
+    appearance:none;cursor:pointer;width:100%;height:34px;text-align:left;
+    display:flex;align-items:center;gap:8px;padding:0 10px 0 7px;
+    border:0;border-left:3px solid transparent;border-bottom:1px solid var(--border);
+    background:transparent;color:var(--ink2);font-size:12px;font-family:inherit;
+  }
+  .place-row:hover{background:rgba(11,11,11,0.04)}
+  .place-row .rk{width:22px;text-align:right;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  .place-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .place-row .val{font-variant-numeric:tabular-nums;color:var(--ink)}
+  .place-row.sel{border-left-color:var(--accent);background:rgba(245,158,66,0.14);color:var(--ink);font-weight:600}
+  .place-empty{padding:10px;font-size:12px;color:var(--muted)}
+  @media (max-width:720px){
+    .map-row{flex-direction:column}
+    #place-list-wrap{width:100%}
   }
   #fuel-filter{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .fuel-pill{
@@ -80,16 +102,19 @@
       <button class="pill"    id="btn-city"   onclick="setLevel('city')">City</button>
     </div>
   </div>
-  <div id="place-ctrl" style="display:flex;align-items:center;gap:6px">
-    <span class="ctrl-label">Place</span>
-    <select id="place-sel" onchange="onPlaceSelect(this.value)"></select>
-  </div>
 </div>
 
 <div class="layout">
   <div class="card" id="map-card">
     <div class="card-title" id="map-title">EV adoption by county</div>
-    <div id="map-embed"></div>
+    <div class="map-row">
+      <div class="map-col"><div id="map-embed"></div></div>
+      <aside id="place-list-wrap">
+        <input id="place-search" type="search" autocomplete="off" aria-label="Search places">
+        <div id="place-list-head"></div>
+        <ol id="place-list"></ol>
+      </aside>
+    </div>
     <div id="color-ctrl" style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <span class="ctrl-label">Color</span>
       <div class="pill-group">
@@ -442,23 +467,59 @@ function fuelSpec() {
   };
 }
 
-// ── Place select ──────────────────────────────────────────────────────────
-function populatePlaceSelect() {
-  const pivot = level === 'county' ? COUNTY_PIVOT : CITY_PIVOT;
-  const places = [...new Set(pivot.map(d => d.place))].sort();
-  const sel = document.getElementById('place-sel');
-  sel.innerHTML = places
-    .map(p => `<option value="${p}"${p === selPlace ? ' selected' : ''}>${p}</option>`)
-    .join('');
+// ── Place list ────────────────────────────────────────────────────────────
+function renderPlaceList(revealSel = false) {
+  if (level === 'state') return;
+  const isCo  = level === 'county';
+  const pivot = isCo ? COUNTY_PIVOT : CITY_PIVOT;
+  const key   = `${metric === 'share' ? 'ev_share' : 'ev_count'}_${curYear}`;
+  const fmt   = metric === 'share'
+    ? v => (v * 100).toFixed(1) + '%'
+    : v => Math.round(v).toLocaleString('en-US');
+  const q = document.getElementById('place-search').value.trim().toLowerCase();
+
+  // Rank over all places first so a search keeps each place's true rank
+  const ranked = pivot
+    .map(d => ({place: d.place, v: d[key] ?? 0}))
+    .sort((a, b) => b.v - a.v || a.place.localeCompare(b.place))
+    .map((d, i) => ({...d, rank: i + 1}));
+  const rows = q ? ranked.filter(d => d.place.toLowerCase().includes(q)) : ranked;
+
+  document.getElementById('place-search').placeholder = `Search ${isCo ? 'counties' : 'cities'}…`;
+  document.getElementById('place-list-head').textContent =
+    `Ranked by ${metric === 'share' ? 'EV share' : 'EV count'} · ${curYear}`;
+  const list = document.getElementById('place-list');
+  const top = list.scrollTop;
+  list.innerHTML = rows.length ? rows.map(d => {
+    const sel = d.place === selPlace;
+    return `<li><button class="place-row${sel ? ' sel' : ''}" data-place="${d.place}"` +
+      `${sel ? ' aria-current="true"' : ''}><span class="rk">${d.rank}</span>` +
+      `<span class="nm">${d.place}</span><span class="val">${fmt(d.v)}</span></button></li>`;
+  }).join('') : '<li class="place-empty">No matches</li>';
+
+  // Keep scroll position across re-ranks; only jump to the selection when asked
+  list.scrollTop = top;
+  const cur = list.querySelector('.sel');
+  if (revealSel && cur) cur.scrollIntoView({block: 'nearest'});
 }
 
-function onPlaceSelect(val) {
-  selPlace = val;
+function selectPlace(place) {
+  selPlace = place;
   syncURL();
   document.getElementById('sel-name').textContent = displayName();
+  renderPlaceList(true);
   renderDetails();
-  renderMap();
+  renderMap();  // rebuild to move the orange outline
 }
+
+document.getElementById('place-list').addEventListener('click', e => {
+  const btn = e.target.closest('.place-row');
+  if (btn) selectPlace(btn.dataset.place);
+});
+document.getElementById('place-search').addEventListener('input', () => renderPlaceList());
+document.getElementById('place-search').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.target.value = ''; renderPlaceList(); }
+});
 
 // ── Render helpers ────────────────────────────────────────────────────────
 async function renderMap() {
@@ -470,19 +531,14 @@ async function renderMap() {
   try {
     view.addSignalListener('year_param', (_n, y) => {
       curYear = Math.round(y);
+      renderPlaceList();
     });
   } catch(_) {}
 
   // Click → update selection, rebuild detail charts
   view.addEventListener('click', (_e, item) => {
     if (item && item.datum && item.datum.place) {
-      selPlace = item.datum.place;
-      syncURL();
-      document.getElementById('sel-name').textContent = displayName();
-      document.getElementById('place-sel').value = selPlace;
-      renderDetails();
-      // Rebuild map to update the orange outline on the newly selected shape
-      renderMap();
+      selectPlace(item.datum.place);
     }
   });
 }
@@ -631,15 +687,13 @@ async function boot() {
   document.getElementById('map-title').textContent =
     level === 'state' ? 'UTAH STATEWIDE' : `EV adoption by ${level}`;
   if (level === 'state') {
-    const placeCtrl = document.getElementById('place-ctrl');
     const colorCtrl = document.getElementById('color-ctrl');
-    if (placeCtrl) placeCtrl.style.display = 'none';
     if (colorCtrl) colorCtrl.style.display = 'none';
     document.getElementById('map-card').style.display = 'none';
     document.getElementById('btn-statewide').style.display = 'none';
     document.getElementById('sel-name').textContent = 'UTAH STATEWIDE';
   } else {
-    populatePlaceSelect();
+    renderPlaceList(true);
     document.getElementById('sel-name').textContent = displayName();
   }
   await renderMap();
@@ -659,8 +713,6 @@ function setLevel(l) {
   document.getElementById('map-title').textContent =
     l === 'state' ? 'UTAH STATEWIDE' : `EV adoption by ${l}`;
   document.getElementById('city-note').style.display = l === 'city' ? '' : 'none';
-  const placeCtrl = document.getElementById('place-ctrl');
-  if (placeCtrl) placeCtrl.style.display = l === 'state' ? 'none' : 'flex';
   const colorCtrl = document.getElementById('color-ctrl');
   if (colorCtrl) colorCtrl.style.display = l === 'state' ? 'none' : 'flex';
   document.getElementById('map-card').style.display = l === 'state' ? 'none' : '';
@@ -668,7 +720,8 @@ function setLevel(l) {
   if (l === 'state') {
     document.getElementById('sel-name').textContent = 'UTAH STATEWIDE';
   } else {
-    populatePlaceSelect();
+    document.getElementById('place-search').value = '';
+    renderPlaceList(true);
     document.getElementById('sel-name').textContent = displayName();
   }
   syncURL();
@@ -678,6 +731,7 @@ function setLevel(l) {
 function setMetric(m) {
   metric = m;
   setActive(['btn-share','btn-count'], `btn-${m}`);
+  renderPlaceList();
   renderMap();  // metric only affects the map color — detail charts unchanged
 }
 
